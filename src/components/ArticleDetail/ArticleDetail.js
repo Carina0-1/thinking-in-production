@@ -126,7 +126,12 @@ const ArticleDetail = () => {
           <div className={styles.content}>
             {article.content.split('\n').map((paragraph, index) => {
               if (paragraph.trim() === '') return null;
-              
+
+              // 处理分隔线
+              if (paragraph.trim() === '---') {
+                return <hr key={index} className={styles.divider} />;
+              }
+
               // 处理标题
               if (paragraph.startsWith('# ')) {
                 return (
@@ -135,7 +140,7 @@ const ArticleDetail = () => {
                   </h1>
                 );
               }
-              
+
               if (paragraph.startsWith('## ')) {
                 return (
                   <h2 key={index} className={styles.contentH2}>
@@ -143,7 +148,7 @@ const ArticleDetail = () => {
                   </h2>
                 );
               }
-              
+
               if (paragraph.startsWith('### ')) {
                 return (
                   <h3 key={index} className={styles.contentH3}>
@@ -151,7 +156,7 @@ const ArticleDetail = () => {
                   </h3>
                 );
               }
-              
+
               // 处理代码块
               if (paragraph.startsWith('```')) {
                 return (
@@ -160,25 +165,24 @@ const ArticleDetail = () => {
                   </pre>
                 );
               }
-              
-              // 处理行内代码
-              const processInlineCode = (text) => {
-                return text.split(/(`[^`]+`)/).map((part, i) => {
+
+              // 处理行内格式：加粗、行内代码
+              const processInlineFormatting = (text) => {
+                return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/).map((part, i) => {
+                  if (part.match(/^\*\*[^*]+\*\*$/)) {
+                    return <strong key={i}>{part.slice(2, -2)}</strong>;
+                  }
                   if (part.match(/^`[^`]+`$/)) {
-                    return (
-                      <code key={i} className={styles.inlineCode}>
-                        {part.slice(1, -1)}
-                      </code>
-                    );
+                    return <code key={i} className={styles.inlineCode}>{part.slice(1, -1)}</code>;
                   }
                   return part;
                 });
               };
-              
+
               // 普通段落
               return (
                 <p key={index} className={styles.paragraph}>
-                  {processInlineCode(paragraph)}
+                  {processInlineFormatting(paragraph)}
                 </p>
               );
             })}
