@@ -299,6 +299,34 @@
   margin-bottom: 2rem;
 }
 
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.th {
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  padding: 0.6rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+}
+
+.td {
+  border: 1px solid #e0e0e0;
+  padding: 0.6rem 1rem;
+  color: #555;
+  vertical-align: top;
+}
+
+.table tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .navigation {

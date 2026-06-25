@@ -124,68 +124,111 @@ const ArticleDetail = () => {
         {/* Article Body */}
         <div className={styles.articleBody}>
           <div className={styles.content}>
-            {article.content.split('\n').map((paragraph, index) => {
-              if (paragraph.trim() === '') return null;
+            {(() => {
+              const lines = article.content.split('\n');
+              const elements = [];
+              let i = 0;
 
-              // 处理分隔线
-              if (paragraph.trim() === '---') {
-                return <hr key={index} className={styles.divider} />;
-              }
-
-              // 处理标题
-              if (paragraph.startsWith('# ')) {
-                return (
-                  <h1 key={index} className={styles.contentH1}>
-                    {paragraph.replace('# ', '')}
-                  </h1>
-                );
-              }
-
-              if (paragraph.startsWith('## ')) {
-                return (
-                  <h2 key={index} className={styles.contentH2}>
-                    {paragraph.replace('## ', '')}
-                  </h2>
-                );
-              }
-
-              if (paragraph.startsWith('### ')) {
-                return (
-                  <h3 key={index} className={styles.contentH3}>
-                    {paragraph.replace('### ', '')}
-                  </h3>
-                );
-              }
-
-              // 处理代码块
-              if (paragraph.startsWith('```')) {
-                return (
-                  <pre key={index} className={styles.codeBlock}>
-                    <code>{paragraph.replace(/```\w*\n?/, '').replace(/```$/, '')}</code>
-                  </pre>
-                );
-              }
-
-              // 处理行内格式：加粗、行内代码
               const processInlineFormatting = (text) => {
-                return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/).map((part, i) => {
+                return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/).map((part, idx) => {
                   if (part.match(/^\*\*[^*]+\*\*$/)) {
-                    return <strong key={i}>{part.slice(2, -2)}</strong>;
+                    return <strong key={idx}>{part.slice(2, -2)}</strong>;
                   }
                   if (part.match(/^`[^`]+`$/)) {
-                    return <code key={i} className={styles.inlineCode}>{part.slice(1, -1)}</code>;
+                    return <code key={idx} className={styles.inlineCode}>{part.slice(1, -1)}</code>;
                   }
                   return part;
                 });
               };
 
-              // 普通段落
-              return (
-                <p key={index} className={styles.paragraph}>
-                  {processInlineFormatting(paragraph)}
-                </p>
-              );
-            })}
+              const isTableRow = (line) => line.trim().startsWith('|') && line.trim().endsWith('|');
+              const isSeparatorRow = (line) => /^\|[\s\-|]+\|$/.test(line.trim());
+
+              while (i < lines.length) {
+                const line = lines[i];
+
+                if (line.trim() === '') { i++; continue; }
+
+                if (line.trim() === '---') {
+                  elements.push(<hr key={i} className={styles.divider} />);
+                  i++;
+                  continue;
+                }
+
+                if (line.startsWith('# ')) {
+                  elements.push(<h1 key={i} className={styles.contentH1}>{line.replace('# ', '')}</h1>);
+                  i++;
+                  continue;
+                }
+
+                if (line.startsWith('## ')) {
+                  elements.push(<h2 key={i} className={styles.contentH2}>{line.replace('## ', '')}</h2>);
+                  i++;
+                  continue;
+                }
+
+                if (line.startsWith('### ')) {
+                  elements.push(<h3 key={i} className={styles.contentH3}>{line.replace('### ', '')}</h3>);
+                  i++;
+                  continue;
+                }
+
+                if (line.startsWith('```')) {
+                  elements.push(
+                    <pre key={i} className={styles.codeBlock}>
+                      <code>{line.replace(/```\w*\n?/, '').replace(/```$/, '')}</code>
+                    </pre>
+                  );
+                  i++;
+                  continue;
+                }
+
+                // 表格：收集连续的表格行
+                if (isTableRow(line)) {
+                  const tableLines = [];
+                  while (i < lines.length && isTableRow(lines[i])) {
+                    tableLines.push(lines[i]);
+                    i++;
+                  }
+                  const parseRow = (row) =>
+                    row.trim().slice(1, -1).split('|').map(cell => cell.trim());
+
+                  const headerCells = parseRow(tableLines[0]);
+                  const bodyRows = tableLines.slice(2).filter(r => !isSeparatorRow(r));
+
+                  elements.push(
+                    <table key={`table-${i}`} className={styles.table}>
+                      <thead>
+                        <tr>
+                          {headerCells.map((cell, ci) => (
+                            <th key={ci} className={styles.th}>{processInlineFormatting(cell)}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {bodyRows.map((row, ri) => (
+                          <tr key={ri}>
+                            {parseRow(row).map((cell, ci) => (
+                              <td key={ci} className={styles.td}>{processInlineFormatting(cell)}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  );
+                  continue;
+                }
+
+                elements.push(
+                  <p key={i} className={styles.paragraph}>
+                    {processInlineFormatting(line)}
+                  </p>
+                );
+                i++;
+              }
+
+              return elements;
+            })()}
           </div>
         </div>
 
